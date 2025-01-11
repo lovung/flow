@@ -160,15 +160,15 @@ func main() {
 		Context: context.Background(),
 		Data:    "Example Data",
 	}
-
+	
 	err := flow.Seq(
-        handler.step1, 
-        // step2 and step3 will be run concurrently but after step1
-        flow.Go(
-            handler.step2,
-            handler.step3,
-        ),
-    )(ctx)
+		handler.step1, 
+		// step2 and step3 will be run concurrently but after step1
+		flow.Go(
+			handler.step2,
+			handler.step3,
+		),
+	)(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
