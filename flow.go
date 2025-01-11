@@ -8,7 +8,7 @@ import (
 
 type Func[T context.Context] func(ctx T) error
 
-// Steps run steps consecutively
+// Steps run steps consecutively / sequentially
 func Steps[T context.Context](ctx T, steps ...Func[T]) error {
 	for _, s := range steps {
 		err := s(ctx)
@@ -17,6 +17,11 @@ func Steps[T context.Context](ctx T, steps ...Func[T]) error {
 		}
 	}
 	return nil
+}
+
+type EmbedableContext interface {
+	context.Context
+	Embed(context.Context)
 }
 
 // Go run steps concurrently
