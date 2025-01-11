@@ -100,6 +100,38 @@ func TestGo(t *testing.T) {
 	})
 }
 
+func TestCombine(t *testing.T) {
+	handler := LoginHandler{}
+	// Replace with net or API framework context
+	ctx := context.Background()
+	apiCtx := &LoginContext{
+		Context:  ctx,
+		username: "username", // Get from ctx instead
+		password: "password", // Get from ctx instead
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		err := flow.Seq(
+			flow.Go(
+				handler.step1,
+				handler.step2,
+			),
+			handler.step3,
+		)(apiCtx)
+		assert.NoError(t, err)
+	})
+	t.Run("error", func(t *testing.T) {
+		err := flow.Seq(
+			flow.Go(
+				handler.step1,
+				handler.step2Error,
+			),
+			handler.step3,
+		)(apiCtx)
+		assert.Error(t, err)
+	})
+}
+
 type LoginContext struct {
 	context.Context
 
