@@ -6,17 +6,19 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type Func[T context.Context] func(ctx T) error
+type Step[T context.Context] func(ctx T) error
 
-// Steps run steps consecutively / sequentially
-func Steps[T context.Context](ctx T, steps ...Func[T]) error {
-	for _, s := range steps {
-		err := s(ctx)
-		if err != nil {
-			return err
+// Seq run steps consecutively / sequentially
+func Seq[T context.Context](steps ...Step[T]) Step[T] {
+	return func(ctx T) error {
+		for _, s := range steps {
+			err := s(ctx)
+			if err != nil {
+				return err
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
 type EmbedableContext interface {
@@ -25,13 +27,15 @@ type EmbedableContext interface {
 }
 
 // Go run steps concurrently
-func Go[T EmbedableContext](ctx T, steps ...Func[T]) error {
-	eg, _ctx := errgroup.WithContext(ctx)
-	ctx.Embed(_ctx)
-	for _, s := range steps {
-		eg.Go(func() error {
-			return s(ctx)
-		})
+func Go[T EmbedableContext](steps ...Step[T]) Step[T] {
+	return func(ctx T) error {
+		eg, _ctx := errgroup.WithContext(ctx)
+		ctx.Embed(_ctx)
+		for _, s := range steps {
+			eg.Go(func() error {
+				return s(ctx)
+			})
+		}
+		return eg.Wait()
 	}
-	return eg.Wait()
 }

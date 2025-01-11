@@ -22,21 +22,19 @@ func TestSteps(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		err := flow.Steps(
-			apiCtx,
+		err := flow.Seq(
 			handler.step1,
 			handler.step2,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.NoError(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
-		err := flow.Steps(
-			apiCtx,
+		err := flow.Seq(
 			handler.step1,
 			handler.step2Error,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.Error(t, err)
 	})
 }
@@ -53,20 +51,18 @@ func TestGo(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		err := flow.Go(
-			apiCtx,
 			handler.step1,
 			handler.step2,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.NoError(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
 		err := flow.Go(
-			apiCtx,
 			handler.step1,
 			handler.step2Error,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.Error(t, err)
 	})
 	t.Run("cancel", func(t *testing.T) {
@@ -78,15 +74,14 @@ func TestGo(t *testing.T) {
 		}
 		cancel()
 		err := flow.Go(
-			apiCtx,
 			handler.step1,
 			handler.step2,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.NoError(t, err)
 	})
 	t.Run("timeout", func(t *testing.T) {
-		ctx, _ := context.WithTimeout(
+		ctx, cancel := context.WithTimeout(
 			context.Background(),
 			1*time.Second,
 		)
@@ -95,12 +90,12 @@ func TestGo(t *testing.T) {
 			username: "username", // Get from ctx instead
 			password: "password", // Get from ctx instead
 		}
+		cancel()
 		err := flow.Go(
-			apiCtx,
 			handler.step1,
 			handler.step2,
 			handler.step3,
-		)
+		)(apiCtx)
 		assert.NoError(t, err)
 	})
 }
